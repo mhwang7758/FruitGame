@@ -17,6 +17,27 @@ public class Block {
      */
     private String mText;
 
+    /**
+     *  方块在图中的位置
+     */
+    private float mLeft;
+    private float mTop;
+
+    public float getLeft() {
+        return mLeft;
+    }
+
+    public void setLeft(float left) {
+        mLeft = left;
+    }
+
+    public float getTop() {
+        return mTop;
+    }
+
+    public void setTop(float top) {
+        mTop = top;
+    }
 
     public int getNum() {
         return mNum;
