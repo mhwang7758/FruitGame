@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.mhwang.bean.Block;
@@ -26,7 +27,7 @@ import java.util.TimerTask;
  * 作者：王明海
  * 创建时间：2016/11/9
  */
-public class GameView extends View {
+public class GameView extends View implements GameViewBehavier{
 
     /**
      *  第一块的左上角坐标
@@ -35,6 +36,11 @@ public class GameView extends View {
     private float mFirstBlockTop;
     private float mCenterBlockLeft;
     private float mCenterBlockTop;
+    /**
+     *  圆心坐标
+     * */
+    private float cx;
+    private float cy;
     /**
      * 方块宽高
      */
@@ -54,6 +60,8 @@ public class GameView extends View {
     private List<Block> mBlocks;
 
     private Paint mPaint;
+
+    private float startRadius = 20;
 
     /**
      *  选中的方块，方块被选中会变色
@@ -81,6 +89,9 @@ public class GameView extends View {
         mCenterBlockLeft = MARGIN;
         mFirstBlockTop = MARGIN;
         mCenterBlockTop = mBlockSize+MARGIN;
+        cx = (mFirstBlockLeft+5*mBlockSize)/2;
+        cy = (mFirstBlockTop+7*mBlockSize)/2;
+        startRadius = mBlockSize*2/3;
     }
 
     @Override
@@ -89,9 +100,15 @@ public class GameView extends View {
         if (mSelectBlock > 20){
             mSelectBlock = 0;
         }
+
+        // 画中间开始的圆
+        mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setColor(Color.argb(144,122,122,122));
+        canvas.drawCircle(cx,cy,startRadius,mPaint);
         for (int i = 0; i < mBlocks.size(); i++){
             // 如果方块的数字刚好是被选中的数字，则变色
-            if (i == mSelectBlock){
+            Block block = mBlocks.get(i);
+            if (block.getNum() == mSelectBlock){
                 mPaint.setStyle(Paint.Style.STROKE);
                 mPaint.setStrokeWidth(5);
                 mPaint.setColor(Color.GREEN);
@@ -101,8 +118,8 @@ public class GameView extends View {
                 mPaint.setStrokeWidth(1);
             }
             float left,top;
-            left = mBlocks.get(i).getLeft();
-            top = mBlocks.get(i).getTop();
+            left = block.getLeft();
+            top = block.getTop();
             Bitmap  bitmap = BitmapFactory.decodeResource(getResources(), mRecIds[i]);
             canvas.drawBitmap(BitmapUtil.resizeBitmap(bitmap, mBlockSize, mBlockSize),
                     left, top, mPaint);
@@ -115,16 +132,7 @@ public class GameView extends View {
         }
     }
 
-    private boolean stop = false;
-    public void startGame(){
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-              stop = true;
-            }
-        },5000);
-    }
+    private boolean stop = true;
 
     /** 设置块
      * @param blocks
@@ -140,7 +148,7 @@ public class GameView extends View {
                 block.setLeft(mFirstBlockLeft);
                 block.setTop(mFirstBlockTop);
                 mFirstBlockLeft += mBlockSize;
-            }else if (i>=TYPE*2 && i<= TYPE *3 -1){
+            }else if (i>=TYPE*3 && i<= TYPE *4 -1){
                 mFirstBlockLeft -= mBlockSize;
                 block.setLeft(mFirstBlockLeft);
                 block.setTop(mFirstBlockTop+mBlockSize*6);
@@ -156,5 +164,43 @@ public class GameView extends View {
                 centerCount++;
             }
         }
+    }
+
+    /**
+     *  定时器
+     */
+    private Timer mTimer;
+
+    @Override
+    public void startTimer() {
+        mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                stop = false;
+            }
+        },5000);
+    }
+
+    @Override
+    public void stopTimer() {
+        if (mTimer != null){
+            stop = false;
+            mTimer.cancel();
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        float x,y;
+        if (event.getAction() == MotionEvent.ACTION_DOWN){
+            x = event.getX();
+            y = event.getY();
+            if (x >= cx-startRadius && x <= cx+startRadius
+                    && y >= cy-startRadius && y <= cy+startRadius){
+                showLog("is click start!");
+            }
+        }
+        return super.onTouchEvent(event);
     }
 }
